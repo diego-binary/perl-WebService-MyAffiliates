@@ -18,28 +18,6 @@ my $res = $aff->create_affiliate({'incomplete' => 'params'});
 
 ok(!$res, 'Returns undef if incomplete parameters are passed');
 
-$res = $aff->create_affiliate({
-    'first_name'    => 'Chales',
-    'last_name'     => 'Babbage',
-    'date_of_birth' => '1871-10-18',
-    'individual'    => 1,
-    'phone_number'  => '+4412341234',
-    'address'       => 'Some street',
-    'city'          => 'Some City',
-    'state'         => 'Some State',
-    'postcode'      => '1234',
-    'website'       => 'https://locahost.com/',
-    'agreement'     => 1,
-    'username'      => 'charles_babbage.com',
-    'email'         => 'charles@babbage.com',
-    'country'       => 'GB',
-    'password'      => 's3cr3t',
-    'individual'    => 'individual',
-    'plans'         => '2,4',
-});
-
-ok($res, 'Returns the created account');
-
 done_testing();
 
 1;

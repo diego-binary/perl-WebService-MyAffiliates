@@ -274,9 +274,9 @@ Returns Array ref with customer list.
     my $customers = $aff->get_customers( AFFILIATE_ID => $affiliate_id );
 
 
-=head2 create_affiliate 
+=head2 create_affiliate
 
-Feed 26:Create Affiliate 
+Feed 26:Create Affiliate
 
 L<https://myaffiliates.atlassian.net/wiki/display/PUB/Feed+26%3A+Create+Affiliate>
 
