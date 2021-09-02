@@ -56,7 +56,7 @@ sub get_users {    ## no critic (ArgUnpacking)
 sub create_affiliate {
     my $self = shift;
     my $args = shift;
-    die 'A hashref was expected as parameter' unless ref $args eq ref {};
+    croak 'A hashref was expected as parameter' unless ref $args eq ref {};
     my $parameters = {};
     for my $arg (keys(${args}->%*)) {
         $parameters->{'PARAM_' . $arg} = $args->{$arg};

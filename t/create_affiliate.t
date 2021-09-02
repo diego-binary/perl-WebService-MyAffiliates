@@ -4,22 +4,28 @@ use strict;
 use warnings;
 use WebService::MyAffiliates;
 use Test::More;
-use Test::MockModule qw/strict/;
+use Test::Exception;
+use Test::MockModule;
 
-plan skip_all => "ENV MYAFFILIATES_USER/MYAFFILIATES_PASS/MYAFFILIATES_HOST is required to continue."
-    unless $ENV{MYAFFILIATES_USER}
-    and $ENV{MYAFFILIATES_PASS}
-    and $ENV{MYAFFILIATES_HOST};
 my $aff = WebService::MyAffiliates->new(
-    user => $ENV{MYAFFILIATES_USER},
-    pass => $ENV{MYAFFILIATES_PASS},
-    host => $ENV{MYAFFILIATES_HOST});
+    user => 'user',
+    pass => 'pass',
+    host => 'host');
 
-my $res = $aff->create_affiliate({'incomplete' => 'params'});
-
-ok(!$res, 'Returns undef if incomplete parameters are passed');
+throws_ok { $aff->create_affiliate(undef) } qr/A hashref was expected as parameter/, 'Throws error if undef parameter';
 
 my $mock_aff = Test::MockModule->new('WebService::MyAffiliates');
+
+$mock_aff->mock(
+    'request',
+    sub {
+        return +{
+            'INIT' =>  { 'ERROR_COUNT' => 0, 'WARNING_COUNT' }
+            };
+
+    });
+
+ok($aff->create_affiliate({}), 'hashref valid parameter');
 
 $mock_aff->mock(
     'request',
@@ -46,14 +52,14 @@ my $args = {
     'postcode'      => '1234',
     'website'       => 'https://www.example.com/',
     'agreement'     => 1,
-    'username'      => 'charles_babbage.com',
+    'username'      => 'charles_babbage',
     'email'         => 'repeated@email.com',
     'country'       => 'GB',
     'password'      => 's3cr3t',
     'plans'         => '2,4',
 };
 
-$res = $aff->create_affiliate($args);
+my $res = $aff->create_affiliate($args);
 
 ok(!$res, 'Returns undef in case of a single error');
 
@@ -77,6 +83,50 @@ $mock_aff->mock(
 $res = $aff->create_affiliate($args);
 
 ok(!$res, 'Returns undef in case of multiple errors');
+
+$mock_aff->mock(
+    'request',
+    sub {
+        return +{
+            'INIT' => {
+                'ERROR_COUNT' => 2,
+                'ERROR'       => {
+                        'MSG'    => 'An account with this email already exists.',
+                        'DETAIL' => 'email'
+                    }}};
+
+    });
+
+$res = $aff->create_affiliate($args);
+
+ok(!$res, 'Returns undef in case of single error');
+
+$mock_aff->mock(
+    'request',
+    sub {
+        return +{
+            'INIT' => {
+                'ERROR_COUNT' => 0,
+                'WARNING_COUNT' => 1,
+                'WARNING_DETAIL' => {
+                    'DETAIL' => 'password',
+                    'MSG' => 'Setting a password for a new affiliate is optional and will be deprecated in future'
+                },
+                'USERNAME' => 'charles_babbage',
+                'PASSWORD' => 's3cr3t',
+                'PARENT' => 0,
+                'USERID' => 170890,
+                'COUNTRY' => 'GB',
+                'LANGUAGE' => 0,
+                'EMAIL' => 'repeated@email.com'
+                }
+            };
+    });
+
+$res = $aff->create_affiliate($args);
+
+ok($res, 'Returns the ref correctly');
+ok(!$res->{PASSWORD}, 'It does not return the password');
 
 done_testing();
 
