@@ -10,7 +10,8 @@ use Test::MockModule;
 my $aff = WebService::MyAffiliates->new(
     user => 'user',
     pass => 'pass',
-    host => 'host');
+    host => 'host'
+);
 
 throws_ok { $aff->create_affiliate(undef) } qr/A hashref was expected as parameter/, 'Throws error if undef parameter';
 
@@ -20,8 +21,10 @@ $mock_aff->mock(
     'request',
     sub {
         return +{
-            'INIT' =>  { 'ERROR_COUNT' => 0, 'WARNING_COUNT' }
-            };
+            'INIT' => {
+                'ERROR_COUNT' => 0,
+                'WARNING_COUNT'
+            }};
 
     });
 
@@ -91,9 +94,9 @@ $mock_aff->mock(
             'INIT' => {
                 'ERROR_COUNT' => 2,
                 'ERROR'       => {
-                        'MSG'    => 'An account with this email already exists.',
-                        'DETAIL' => 'email'
-                    }}};
+                    'MSG'    => 'An account with this email already exists.',
+                    'DETAIL' => 'email'
+                }}};
 
     });
 
@@ -106,26 +109,25 @@ $mock_aff->mock(
     sub {
         return +{
             'INIT' => {
-                'ERROR_COUNT' => 0,
-                'WARNING_COUNT' => 1,
+                'ERROR_COUNT'    => 0,
+                'WARNING_COUNT'  => 1,
                 'WARNING_DETAIL' => {
                     'DETAIL' => 'password',
-                    'MSG' => 'Setting a password for a new affiliate is optional and will be deprecated in future'
+                    'MSG'    => 'Setting a password for a new affiliate is optional and will be deprecated in future'
                 },
                 'USERNAME' => 'charles_babbage',
                 'PASSWORD' => 's3cr3t',
-                'PARENT' => 0,
-                'USERID' => 170890,
-                'COUNTRY' => 'GB',
+                'PARENT'   => 0,
+                'USERID'   => 170890,
+                'COUNTRY'  => 'GB',
                 'LANGUAGE' => 0,
-                'EMAIL' => 'repeated@email.com'
-                }
-            };
+                'EMAIL'    => 'repeated@email.com'
+            }};
     });
 
 $res = $aff->create_affiliate($args);
 
-ok($res, 'Returns the ref correctly');
+ok($res,              'Returns the ref correctly');
 ok(!$res->{PASSWORD}, 'It does not return the password');
 
 done_testing();

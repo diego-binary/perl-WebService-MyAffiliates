@@ -57,7 +57,7 @@ sub create_affiliate {
     my $self = shift;
     my $args = shift;
     croak 'A hashref was expected as parameter' unless ref $args eq ref {};
-    my $parameters = +{ map { ('PARAM_' . $_ => $args->{$_} ) } keys $args->%* };
+    my $parameters = +{map { ('PARAM_' . $_ => $args->{$_}) } keys $args->%*};
 
     my $url = Mojo::URL->new('/feeds.php?FEED_ID=26');
     $url->query($parameters);
