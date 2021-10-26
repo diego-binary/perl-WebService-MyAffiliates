@@ -7,14 +7,14 @@ our $VERSION = '0.08';
 use Carp;
 use Mojo::UserAgent;
 use Mojo::Util qw(b64_encode url_escape);
-use XML::Simple 'XMLin';    ## no critic
+use XML::Simple 'XMLin'; ## no critic
 
 use vars qw/$errstr/;
 sub errstr { return $errstr }
 
 sub new {    ## no critic (ArgUnpacking)
     my $class = shift;
-    my %args  = @_ % 2 ? %{$_[0]} : @_;
+    my %args = @_ % 2 ? %{$_[0]} : @_;
 
     for (qw/user pass host/) {
         $args{$_} || croak "Param $_ is required.";
@@ -45,7 +45,7 @@ sub __ua {
 }
 
 ## https://myaffiliates.atlassian.net/wiki/display/PUB/Feed+1%3A+Users+Feed
-sub get_users {    ## no critic (ArgUnpacking)
+sub get_users {            ## no critic (ArgUnpacking)
     my $self = shift;
     my %args = @_ % 2 ? %{$_[0]} : @_;
     my $url  = Mojo::URL->new('/feeds.php?FEED_ID=1');
@@ -55,8 +55,8 @@ sub get_users {    ## no critic (ArgUnpacking)
 
 sub create_affiliate {
     my $self = shift;
-    my $args = shift;
-    croak 'A hashref was expected as parameter' unless ref $args eq ref {};
+    my $args = @_ % 2 ? %{$_[0]} : @_;
+    croak 'A hashref was expected as parameter' unless ref $args eq 'HASH';
     my $parameters = {};
     for my $arg (keys(${args}->%*)) {
         $parameters->{'PARAM_' . $arg} = $args->{$arg};
@@ -68,7 +68,7 @@ sub create_affiliate {
 
     my $error_count = $res->{INIT}->{ERROR_COUNT};
     if ($error_count) {
-        my $init   = $res->{INIT};
+        my $init = $res->{INIT};
         my @errors = ref $init->{ERROR} eq 'ARRAY' ? $init->{ERROR}->@* : ($init->{ERROR});
         $errstr = map { $_->{MSG} . " " . $_->{DETAIL} } @errors;
         return;
@@ -82,14 +82,14 @@ sub create_affiliate {
 sub get_user {
     my ($self, $id) = @_;
 
-    $id                                         or croak "id is required.";
+    $id or croak "id is required.";
     my $user = $self->get_users(USER_ID => $id) or return;
     return $user->{USER};
 }
 
 ## https://myaffiliates.atlassian.net/wiki/display/PUB/Feed+4%3A+Decode+Token
 sub decode_token {
-    my $self   = shift;
+    my $self = shift;
     my @tokens = @_ or croak 'Must pass at least one token.';
 
     return $self->request('/feeds.php?FEED_ID=4&TOKENS=' . url_escape(join(',', @tokens)));
@@ -128,10 +128,9 @@ sub get_customers {    ## no critic (ArgUnpacking)
     $url->query(\%args) if %args;
     my $res = $self->request($url->to_string);
 
-    my $customers =
-         !exists $res->{PLAYER}         ? []
-        : ref $res->{PLAYER} eq 'ARRAY' ? $res->{PLAYER}
-        :                                 [$res->{PLAYER}];
+    my $customers = !exists $res->{PLAYER}        ? []
+                  : ref $res->{PLAYER} eq 'ARRAY' ? $res->{PLAYER}
+                  :                                 [$res->{PLAYER}];
 
     return $customers;
 }
