@@ -13,8 +13,6 @@ my $aff = WebService::MyAffiliates->new(
     host => 'host'
 );
 
-throws_ok { $aff->create_affiliate(undef) } qr/A hashref was expected as parameter/, 'Throws error if undef parameter';
-
 my $mock_aff = Test::MockModule->new('WebService::MyAffiliates');
 
 $mock_aff->mock(
@@ -23,12 +21,18 @@ $mock_aff->mock(
         return +{
             'INIT' => {
                 'ERROR_COUNT' => 0,
-                'WARNING_COUNT'
+                'WARNING_COUNT' => 0,
             }};
 
     });
 
-ok($aff->create_affiliate({}), 'hashref valid parameter');
+ok($aff->create_affiliate({}), 'A hashref is a valid parameter');
+
+my $hash_params = (
+   first_name => 'Dummy' 
+);
+
+ok($aff->create_affiliate({}), 'A hash is a valid parameter');
 
 $mock_aff->mock(
     'request',
