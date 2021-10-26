@@ -55,12 +55,8 @@ sub get_users {            ## no critic (ArgUnpacking)
 
 sub create_affiliate {
     my $self = shift;
-    my $args = @_ % 2 ? %{$_[0]} : @_;
-    croak 'A hashref was expected as parameter' unless ref $args eq 'HASH';
-    my $parameters = {};
-    for my $arg (keys(${args}->%*)) {
-        $parameters->{'PARAM_' . $arg} = $args->{$arg};
-    }
+    my %args = @_ % 2 ? %{$_[0]} : @_;
+    my $parameters = +{map { ('PARAM_' . $_ => $args{$_}) } keys %args};
 
     my $url = Mojo::URL->new('/feeds.php?FEED_ID=26');
     $url->query($parameters);
