@@ -10,7 +10,7 @@ plan skip_all => "ENV MYAFFILIATES_USER/MYAFFILIATES_PASS/MYAFFILIATES_HOST is r
 my $aff = WebService::MyAffiliates->new(
     user => $ENV{MYAFFILIATES_USER},
     pass => $ENV{MYAFFILIATES_PASS},
-    host => $ENV{MYAFFILIATES_HOST
+    host => $ENV{MYAFFILIATES_HOST}
 );
 
 my $token_info = $aff->decode_token('PQ4YXsO2q5mVAv0U_Fv2nWNd7ZgqdRLk');
