@@ -53,7 +53,7 @@ sub get_users {            ## no critic (ArgUnpacking)
     return $self->request($url->to_string);
 }
 
-sub create_affiliate {
+sub create_affiliate {            ## no critic (ArgUnpacking)
     my $self = shift;
     my %args = @_ % 2 ? %{$_[0]} : @_;
     my $parameters = +{map { ('PARAM_' . $_ => $args{$_}) } keys %args};
