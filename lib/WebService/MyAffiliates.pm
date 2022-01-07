@@ -89,7 +89,11 @@ sub user_status { ## no critic (ArgUnpacking)
     my @user_ids  = ref $args{USER_IDS} ? $args{USER_IDS}->@* : $args{USER_IDS} // ();
     croak 'A HASH or HASHREF with USER_IDS attribute is expected' unless @user_ids;
 
-    my $parameters = {USER_IDS => join(',', @user_ids)};
+    for (@user_ids) {
+        croak 'USER_IDS must be positive integers' unless m/^[1-9][0-9]*/;
+    }
+
+    my $parameters = { USER_IDS => join(',', @user_ids) };
     
     if ($args{SETSTATUS}) {
         $args{SETSTATUS} =~ m/new|accepted|denied|suspended|verified/ or croak 'Possible values for status are "new", "accepted", "denied", "suspended", "verified"';
@@ -360,6 +364,24 @@ Expects HASH or HASHREF with the following attributes and values:
 =item * C<USER_IDS> - Can be an ARRAYREF or NUMBER with the user id(s) to query(or set). 
 
 =item * C<SETSTATUS> - A STRING with the value for the new status to be set. Valid values are C<new>, C<accepted>, C<denied>, C<suspended> and C<verified>.
+
+=back
+
+It returns a a HASHREF with the data returned by myAffiliates.
+
+=over 4
+
+=item * C<INIT> - A HASHREF, empty if no errors or wariings.
+
+=item * C<USER> - A HASHRER, in case multiple user_ids were provided, this will be associated with an ARRAYREF. Otherwise a single HASHREF with the following attributes:
+
+=over 4
+
+=item * C<ID> - A NUMBER with the account identifier.
+
+=item * C<STATUS> - A STRING describing the account status.
+
+=back
 
 =back
 
