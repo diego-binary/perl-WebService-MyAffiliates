@@ -29,6 +29,20 @@ sub new {    ## no critic (ArgUnpacking)
     return bless \%args, $class;
 }
 
+sub _handle_errors {
+    my $res = shift;
+
+    my $error_count = $res->{INIT}->{ERROR_COUNT};
+    if ($error_count) {
+        my $init = $res->{INIT};
+        my @errors = ref $init->{ERROR} eq 'ARRAY' ? $init->{ERROR}->@* : ($init->{ERROR});
+        $errstr = map { $_->{MSG} . " " . $_->{DETAIL} } @errors;
+        return;
+    }
+
+    return $res;
+}
+
 sub __ua {
     my $self = shift;
 
@@ -60,19 +74,32 @@ sub create_affiliate {            ## no critic (ArgUnpacking)
 
     my $url = Mojo::URL->new('/feeds.php?FEED_ID=26');
     $url->query($parameters);
-    my $res = $self->request($url->to_string);
 
-    my $error_count = $res->{INIT}->{ERROR_COUNT};
-    if ($error_count) {
-        my $init = $res->{INIT};
-        my @errors = ref $init->{ERROR} eq 'ARRAY' ? $init->{ERROR}->@* : ($init->{ERROR});
-        $errstr = map { $_->{MSG} . " " . $_->{DETAIL} } @errors;
-        return;
-    }
+    my $res = _handle_errors($self->request($url->to_string));
 
     delete $res->{PASSWORD};
 
     return $res;
+}
+
+sub user_status { ## no critic (ArgUnpacking)
+    my $self = shift;
+    my %args = @_ % 2 ? %{$_[0]} : @_;
+
+    my @user_ids  = ref $args{USER_IDS} ? $args{USER_IDS}->@* : $args{USER_IDS} // ();
+    croak 'A HASH or HASHREF with USER_IDS attribute is expected' unless @user_ids;
+
+    my $parameters = {USER_IDS => join(',', @user_ids)};
+    
+    if ($args{SETSTATUS}) {
+        $args{SETSTATUS} =~ m/new|accepted|denied|suspended|verified/ or croak 'Possible values for status are "new", "accepted", "denied", "suspended", "verified"';
+        $parameters->{SETSTATUS} = $args{SETSTATUS};
+    }
+
+    my $url = Mojo::URL->new('/feeds.php?FEED_ID=3');
+    $url->query($parameters);
+
+    return _handle_errors($self->request($url->to_string));
 }
 
 sub get_user {
@@ -300,21 +327,41 @@ It expects a hashref with all the required parameters for account creation. Othe
 
 =over 4
 
-=item * username: A non-empty string with the username, must be an alphanumeric unique string.
+=item * C<username>: A non-empty string with the username, must be an alphanumeric unique string.
 
-=item * password: A non-empty string with the password, following configured the password policy.
+=item * C<password>: A non-empty string with the password, following configured the password policy.
 
-=item * email: A non-empty string with a valid e-mail account. It must be unique.
+=item * C<email>: A non-empty string with a valid e-mail account. It must be unique.
 
-=item * referrer_token: Optional. A non-empty string with subaffiliate token.
+=item * C<referrer_token>: Optional. A non-empty string with subaffiliate token.
 
-=item * plans: Optional. A non-empty string with CSV with the channel numeric IDs to subscribe the client. MyAffiliates will also subscribe the client to any default channel unless B<PLAN_FORCE> is set to 1.
+=item * C<plans>: Optional. A non-empty string with CSV with the channel numeric IDs to subscribe the client. MyAffiliates will also subscribe the client to any default channel unless B<PLAN_FORCE> is set to 1.
 
-=item * PLAN_FORCE: Optional. For use with plans, if 1 is set here the client will be subscribe to the channels listed in C<plans> parameters only, and won't be subscribed to any other channel. By default this is is 0.
+=item * C<PLAN_FORCE>: Optional. For use with plans, if 1 is set here the client will be subscribe to the channels listed in C<plans> parameters only, and won't be subscribed to any other channel. By default this is is 0.
 
 =back
 
 Returns a hashref with the details for the created account, in particular a numeric user_id will be returned in the hashref.
+
+=head2 user_status
+
+Feed 3:User Status Feed
+
+Returns the status of a selected list of users. It can also optionally update 
+the status of those users.
+
+    $aff->user_status(USER_IDS => [1,2,3]);
+    $aff->user_status(USER_IDS => 4, SETSTATUS => 'accepted');
+
+Expects HASH or HASHREF with the following attributes and values:
+
+=over 4
+
+=item * C<USER_IDS> - Can be an ARRAYREF or NUMBER with the user id(s) to query(or set). 
+
+=item * C<SETSTATUS> - A STRING with the value for the new status to be set. Valid values are C<new>, C<accepted>, C<denied>, C<suspended> and C<verified>.
+
+=back
 
 =head2 errstr
 
